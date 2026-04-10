@@ -120,14 +120,15 @@ const Home = ({ setDuration, duration }) => {
                     'F': 'Fusion beat'
                 };
 
-                toast.warning(`Abnormal Heart Rhythm Detected: ${labelMap[predictedLabel]}`, {
-                    position: "top-right",
-                    autoClose: 5000,
-                    hideProgressBar: false,
-                    closeOnClick: true,
-                    pauseOnHover: true,
-                    draggable: true
-                });
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    new Notification(`Abnormal Heart Rhythm Detected: ${labelMap[predictedLabel]}`);
+                } else if ('Notification' in window && Notification.permission !== 'denied') {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === 'granted') {
+                            new Notification(`Abnormal Heart Rhythm Detected: ${labelMap[predictedLabel]}`);
+                        }
+                    });
+                }
             }
 
             // Store the full data in your database
