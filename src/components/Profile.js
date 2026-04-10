@@ -11,7 +11,7 @@ const Profile = () => {
         const fetchUserProfile = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get('http://10.100.93.107:5000/profile', {
+                const response = await axios.get('http://10.100.91.208:5000/profile', {
                     headers: { 'x-access-token': token }
                 });
                 setUser(response.data);

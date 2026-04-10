@@ -37,13 +37,13 @@ const Home = ({ setDuration, duration }) => {
         const fetchUserData = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get('http://10.100.93.107:5000/user-data', {
+                const response = await axios.get('http://10.100.91.208:5000/user-data', {
                     headers: {
                         'x-access-token': token,
                     },
                 });
                 setUserData(response.data);
-                
+
                 // If sync_interval exists, set watch as active and update duration
                 if (response.data.sync_interval) {
                     setIsWatchActive(true);
@@ -77,11 +77,11 @@ const Home = ({ setDuration, duration }) => {
     const handleWatchClick = async () => {
         try {
             const token = localStorage.getItem('token');
-            
+
             // Handle sync interval logic
             if (!isWatchActive && !userData?.sync_interval) {
                 try {
-                    await axios.post('http://10.100.93.107:5000/store-sync-interval', 
+                    await axios.post('http://10.100.91.208:5000/store-sync-interval',
                         { interval: duration },
                         {
                             headers: {
@@ -98,7 +98,7 @@ const Home = ({ setDuration, duration }) => {
             }
 
             setIsWatchActive(true);
-            
+
             // Make API calls in sequence since we need heart data for prediction
             const [fullDataResponse, heartDataResponse] = await Promise.all([
                 axios.get('http://10.100.93.107:8000/send_full_data'),
@@ -111,7 +111,7 @@ const Home = ({ setDuration, duration }) => {
             // Send heart data to predict endpoint
             const predictResponse = await axios.post('http://10.100.93.107:8000/predict', heartDataResponse.data);
             console.log('Prediction response:', predictResponse.data.predicted_label);
-            
+
             const predictedLabel = predictResponse.data.predicted_label;
             if (['S', 'V', 'F'].includes(predictedLabel)) {
                 const labelMap = {
@@ -119,7 +119,7 @@ const Home = ({ setDuration, duration }) => {
                     'V': 'Ventricular ectopic beat',
                     'F': 'Fusion beat'
                 };
-                
+
                 toast.warning(`Abnormal Heart Rhythm Detected: ${labelMap[predictedLabel]}`, {
                     position: "top-right",
                     autoClose: 5000,
@@ -131,13 +131,13 @@ const Home = ({ setDuration, duration }) => {
             }
 
             // Store the full data in your database
-            await axios.post('http://10.100.93.107:5000/store-patient-data', fullDataResponse.data, {
+            await axios.post('http://10.100.91.208:5000/store-patient-data', fullDataResponse.data, {
                 headers: {
                     'x-access-token': token,
                 },
             });
         } catch (error) {
-            toast.error('Error processing heart data');
+            // toast.error('Error processing heart data');
             console.error('Error:', error);
             if (error.response) {
                 console.error('Error response:', error.response.data);
@@ -182,31 +182,26 @@ const Home = ({ setDuration, duration }) => {
     useEffect(() => {
         const fetchSuggestions = async () => {
             try {
-                // First check localStorage
-                const cachedSuggestions = localStorage.getItem('suggestions');
-                if (cachedSuggestions) {
-                    setSuggestions(JSON.parse(cachedSuggestions));
-                    return;
-                }
-
                 const token = localStorage.getItem('token');
-                const response = await axios.get('http://10.100.93.107:5000/user-data', {
+                const response = await axios.get('http://10.100.91.208:5000/user-data', {
                     headers: {
                         'x-access-token': token,
                     },
                 });
-                console.log('User data:', response.data);
 
-                // Send data to medical analysis endpoint
                 const endpoint = 'http://10.100.93.107:8000/MedicalAnalysis';
-                const dummyResponse = await axios.post(endpoint, response.data);
-                console.log('Medical Analysis response:', dummyResponse.data);
+                const analysisResponse = await axios.post(endpoint, response.data);
 
-                // Store in localStorage
-                localStorage.setItem('suggestions', JSON.stringify(dummyResponse.data));
-                setSuggestions(dummyResponse.data);
+                // Update cache and state
+                localStorage.setItem('suggestions', JSON.stringify(analysisResponse.data));
+                setSuggestions(analysisResponse.data);
             } catch (error) {
                 console.error('Error fetching suggestions:', error);
+                // On error, try using cached data
+                const cachedSuggestions = localStorage.getItem('suggestions');
+                if (cachedSuggestions) {
+                    setSuggestions(JSON.parse(cachedSuggestions));
+                }
             }
         };
 
@@ -225,8 +220,8 @@ const Home = ({ setDuration, duration }) => {
                 {suggestions ? (
                     <div>
                         {Object.keys(suggestions).map((condition, index) => (
-                            <div 
-                                key={index} 
+                            <div
+                                key={index}
                                 style={{
                                     ...styles.suggestionCard,
                                     backgroundColor: getSeverityColor(suggestions[condition].severity),
@@ -274,15 +269,15 @@ const Home = ({ setDuration, duration }) => {
                     </div>
                 )}
                 <div style={styles.watchContainer}>
-                    <img 
-                        src={watchImage} 
-                        alt="Watch" 
+                    <img
+                        src={watchImage}
+                        alt="Watch"
                         className="watch-image" // Add this class for querySelector
                         style={{
                             ...styles.watchImage,
                             ...(isWatchActive && styles.activeWatchImage)
-                        }} 
-                        onClick={handleWatchClick} 
+                        }}
+                        onClick={handleWatchClick}
                     />
                 </div>
             </div>

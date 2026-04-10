@@ -24,7 +24,7 @@ const App = () => {
       const response = await axios.get('http://10.100.93.107:8000/send_full_data');
       console.log('External API response:', response.data);
 
-      await axios.post('http://10.100.93.107:5000/store-patient-data', response.data, {
+      await axios.post('http://10.100.91.208:5000/store-patient-data', response.data, {
         headers: {
           'x-access-token': token,
         },

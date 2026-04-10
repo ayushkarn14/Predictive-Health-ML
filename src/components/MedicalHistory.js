@@ -11,7 +11,7 @@ const MedicalHistory = () => {
         const fetchMedicalHistory = async () => {
             try {
                 const token = localStorage.getItem('token');
-                const response = await axios.get('http://10.100.93.107:5000/health-conditions', {
+                const response = await axios.get('http://10.100.91.208:5000/health-conditions', {
                     headers: {
                         'x-access-token': token
                     }
